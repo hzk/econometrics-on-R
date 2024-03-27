@@ -1,0 +1,445 @@
+---
+title: "R_Analyze"
+author: "ZhongKai Han, WenTing Huang"
+format: html
+editor: visual
+---
+
+## load spss data (.saw)
+
+加载spss进行分析
+
+```{r}
+library(memisc)
+data0 = as.data.set(spss.system.file("254359000_36_36.sav"))
+data = as.data.frame(data0)
+#str(data)
+#knitr::kable(data)
+```
+
+## 描述性分析性别,年龄,输入时间
+
+```{r}
+#table(data["totalseconds"],data["gender"],data["age"])
+#table(data$totalseconds,data$gender,data$age)
+options(digits=10)
+options(scipen = 999)
+class(data$age)
+levels(data$age)
+data$index <- as.numeric(as.character(data$index))
+#data$gender <- as.character(data$gender)
+data$gender <- as.numeric(data$gender)-1
+data$age <- as.numeric(as.character(data$age))
+data$totalseconds <- as.numeric(as.character(data$totalseconds))
+#sd(data$totalseconds)
+#summary(data$gender)
+summary(data$totalseconds, digits = 4)
+data$totalseconds
+#sd(data$totalseconds)
+#sd(data$totalseconds)/sqrt(length(data$totalseconds))
+#summary(data$age, digits = 4)
+#sd(data$age)
+#sd(data$age)/sqrt(length(data$age))
+#mean(as.numeric(as.character(data$age)))
+#median(as.numeric(as.character(data$age)))
+#summary(data$age, digits = 4)
+#table(data$gender,data$age)
+#table(data$gender)
+#table(data$age)
+
+
+#data.frame( as.numeric(data$totalseconds),as.numeric(data$gender),as.numeric(data$age)) |>
+#  summary()
+#summary( as.numeric(data$totalseconds),as.numeric(data$gender),as.numeric(data$age) )
+```
+
+### 离差平方和 (Sum of Squares of Deviations, SS)
+
+衡量数据离散程度的指标，它是每个数据点与其平均值之间的距离的平方和。 $$SS=\sum_{i=1}^{n}(x_i-\bar{x})^2$$
+
+### 方差(Var, Variance)
+
+方差是数据集中每个数据点与样本均值的偏差的平方的平均值。 $$总体Var = \frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n}=\frac{SS}{n} \\
+样本Var = \frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1}=\frac{SS}{n-1}$$
+
+```{r}
+var(data$age)
+var(data$totalseconds)
+```
+
+-   
+
+### 标准差(Population Standard Deviation,PSD \| Standard Deviation,SD)
+
+标准差表示样本数据的离散程度。它是每个数据点与样本均值的偏差的平方的平均值的平方根。 标准差中要注意: 总体标准差,样本标准差 总体标准差是整个总体数据计算出来,这需要所有样本 样本标准差是从总体中抽取出来的,通常实际应用都使用样本标准差 $$
+总体:PSD = \sqrt{Var} = \sqrt{\frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n}},
+样本:SD = \sqrt{Var} = \sqrt{\frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1}}
+$$
+
+```{r}
+sd(data$age)
+sd(data$totalseconds)
+```
+
+### 标准误(Standard Error of the Mean，SEM)
+
+表示样本均值估计的精度。它是样本标准差除以样本大小的平方根。 $$
+总体SEM = \frac{SD}{\sqrt{n}} = \frac{\sqrt{Var}}{\sqrt{n}} = \frac{\sqrt{\frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n}}}{\sqrt{n}} =
+(\sum_{i=1}^{n}(x_i-\bar{x})^2*n^{-1})^{\frac{1}{2}}*n^{-\frac{1}{2}}
+$$ $$
+样本SEM = \frac{SD}{\sqrt{n-1}} = \frac{\sqrt{Var}}{\sqrt{n-1}} = \frac{\sqrt{\frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1}}}{\sqrt{n-1}} =
+(\sum_{i=1}^{n}(x_i-\bar{x})^2*(n-1)^{-1})^{\frac{1}{2}}*(n-1)^{-\frac{1}{2}}
+$$
+
+```{r}
+sd(data$age)/sqrt(length(data$totalseconds))
+sd(data$totalseconds)/sqrt(length(data$totalseconds))
+```
+
+### 协方差
+
+协方差衡量的是两个变量的平均离差程度。 $$
+Cov(x,y)=\frac{\sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y})}{n-1}
+$$
+
+### 标准误差(Standard Error, SE)
+
+用来衡量样本统计量与总体参数之间的差异的一种估计量。在回归分析中，标准误差用于衡量回归系数估计值与真实参数之间的差异。
+
+### 按性别统计
+
+```{r}
+table(data$gender)
+summary(data$gender, digits = 4)
+```
+
+### 按性别分组查看年龄分布
+
+```{r}
+library(dplyr)
+summary(data$age, digits = 4)
+#data[data$gender=="男",]
+#data[data$gender == "男",]$age
+summary(data[data$gender=="男",]$age, digits = 4)
+summary(data[data$gender=="女",]$age, digits = 4)
+#summary(data[data$age=="1",], digits = 4)
+table(data$gender,data$age)
+#addmargins(prop.table(table_),2)*100
+
+par(family = "STHeiti")
+barplot(table(data$gender,data$age), beside = TRUE, legend = TRUE,
+        main = "姓别 and 年龄 Frequency",
+        xlab = "姓别",
+        ylab = "Frequency",
+        las=1)
+summarise(group_by(data,gender),count=n(),percentage = count / sum(count),min_var=min(age),median_var=median(age),max_var=max(age))
+#summarise(group_by(data,gender),count=n(),min_var=min(age),median_var=median(age),max_var=max(age))
+
+# 打印输出结果
+#print(cross_table_percentage_with_margins)
+#knitr::kable( table(data$gender,data$age) )
+
+#group_by(data,gender, age) %>%
+#  summarise(count = n()) %>%
+#  mutate(percentage = count / sum(count) * 100)
+
+```
+
+## T检验 T-test
+
+### 独立样本T检验 Independent Samples t-test
+
+提出假设：首先，提出零假设（H0）和备择假设（H1）。零假设通常是两组样本的均值相等，备择假设则是两组样本的均值不相等。 计算差异：计算两组样本的均值差异，这是独立样本 t 检验的核心。如果差异较大，那么可能存在显著的差异；如果差异较小，那么可能不存在显著差异。 计算 t 统计量：根据样本数据计算 t 统计量。t 统计量表示了两组样本均值之间的差异相对于它们的方差的大小。如果 t 统计量越大，表示两组样本的均值差异越显著。 确定显著性水平：选择显著性水平（通常为 0.05），这是决定是否拒绝零假设的标准。 做出决策：将计算得到的 t 统计量与 t 分布的临界值进行比较，根据显著性水平判断是否拒绝零假设。如果计算得到的 t 统计量大于临界值，就拒绝零假设，认为两组样本的均值存在显著差异；否则，接受零假设，认为两组样本的均值没有显著差异。 \*\*\*对正态性假设较为敏感。当样本来自非正态分布时，Levene's Test 的结果可能不准确。
+
+计算过程:
+
+先做 Levene's Test通过计算两组样本的绝对离差平方和的平均值之比来检验方差是否相等。该比值称为Levene统计量。 Levene's Test的结果是一个p值。如果p值小于显著性水平（通常为0.05），则可以拒绝原假设，即两组样本的方差不相等。 如果两组样本的方差不相等 则使用Welch's t检验,否则使用传统t检验 \#### !! Levene's Test 1.计算每个样本的绝对离差平方和 2.计算总体绝对离差平方和,计算所有样本的绝对离差平方和之总和 3.计算组间离差平方和 4.计算 Levene 统计量 5.计算p值,在自由度为 k - 1 和 N - k 的 F 分布下，计算 Levene 统计量的 p 值。 $$\begin{align}
+  SSW_i(第i组的绝对离差平方和)=\sum(x_i-\bar{x}_i)^2 \\
+  SSW = \sum(SSW_i) \\
+  SSB = \sum n_i(每组样本数)(\bar{x_i}-\bar{x}(所有组均值总和))^2 \\
+  F = \frac{(SSB/(k(总组数)-1))}{(SSW/(N(总样本数,每组样本之和)-k))} \\
+  or \\
+  W = \frac{N-k}{k-1}*\frac{\sum_{i=1}^{k}N_i(\bar{Z_i}-\bar{Z_{all}})^2}{\sum_{i=1}^{k} \sum_{j=1}^{N_i}(Z_{ij}-\bar{Z_i})^2}
+\end{align}$$
+
+```{r}
+library(car)
+library(onewaytests)
+# 创建示例数据
+groupA <- c(23, 25, 27, 29, 31)
+groupB <- c(22, 26, 28, 30, 32)
+# 执行Levene's Test
+
+# 输出测试结果
+#print(levene_test)
+getLeveneTest <-function(data0,data1){
+  #levene_test <- leveneTest(data0, data1)
+  #print(levene_test)
+  n0 <- length(data0)
+  n1 <- length(data1)
+  N <- n0+n1
+  k = 2
+  mean0 <- mean(data0)
+  mean1 <- mean(data1)
+  mean_A <- (mean0+mean1)/2
+  SSW0 <-sum((data0-mean0)^2)
+  SSW1 <-sum((data1-mean1)^2)
+  SSW <- SSW0+SSW1
+  SSB <- n0*(mean0-mean_A)^2 + n1*(mean1-mean_A)^2
+  W = (N-k)/(k-1)*SSB/SSW
+  cat(W,pf(W, k - 1, N - k,lower.tail=T,log.p=T),"\n")
+  #计算每组总离差平方和
+  
+}
+for(col_name in colnames(data)){
+  if(col_name!="index"&&col_name!="gender"){
+    data0 <- data[data$gender=="0",][[col_name]]
+    data1 <- data[data$gender=="1",][[col_name]]
+    cat(col_name,":")
+    getLeveneTest(data0,data1)
+  }
+}
+```
+
+#### 传统t检验
+
+1.计算样本均值 2.计算样本标准差 3.计算样本方差 4.计算标准误差 5.计算t统计量:独立样本t统计量(t-statistic) 6.确定自由度 (Degrees of Freedom, df) $$
+4.\ SE_A=\frac{S_A}{\sqrt{n_A}}, SE_B=\frac{S_B}{\sqrt{n_B}} \\
+5.\ t=\frac{(\bar{X}_A-\bar{X}_B)}{\sqrt{SE^2_A+SE^2_B}} \\
+6.\ df = n_A+n_B-2
+$$
+
+```{r}
+#str(data)
+#xx <- data[data$gender=="0",]$age
+#yy <- data[data$gender=="1",]$age
+#t.test(xx,yy)
+#t.test(data[data$gender=="0",], data[data$gender=="1",] )
+#t.test(data[data$gender=="0",]$age, data[data$gender=="1",]$age, var.equal=T)
+#t.test(data[data$gender=="0",]$age, data[data$gender=="1",]$age, )
+#result =t.test(data[data$gender=="0",]$age, data[data$gender=="1",]$age, )
+for(col_name in colnames(data)){
+  if(col_name!="index"&&col_name!="gender"){
+    mean0 <- mean(data[data$gender=="0",][[col_name]])
+    mean1 <- mean(data[data$gender=="1",][[col_name]])
+    for(i in 1:0){
+      result = t.test(data[data$gender=="0",][[col_name]], data[data$gender=="1",][[col_name]], var.equal=i )
+    cat(col_name,":","method",result$method,"t",result$statistic,"df",result$parameter,"Sig.(2-tailed)",result$p.value,"stderr",result$stderr,"Mean Difference",mean0-mean1,"estimate",result$estimate,"null.value",result$null.value,"conf.int",result$conf.int,"\n\n")
+    #print(result)
+    #result = t.test(data[data$gender=="0",][[col_name]], data[data$gender=="1",][[col_name]], )
+    #print(result)
+    }
+    
+  }
+}
+
+```
+
+## 相关性分析 Pearson Correlation
+
+1.计算协方差 2.计算标准差 3.计算Pearson相关系数 $$\begin{align}
+1.\ Cov(x,y)=\frac{\sum_{i=1}^{n}(x_i-\bar{x})(y_j-\bar{y})}{n-1} \\
+2.\ SD(x)=\sqrt{\frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1}} \\
+3.\ r=\frac{Cov(x,y)}{SD(x)\cdot SD(y)} \\
+or \\
+r=\frac{ \sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y})}
+{\sqrt{\sum_{i=1}^{n}(x_i-\bar{x})^2 \sum_{i=1}^{n}(y_i-\bar{y})^2}}
+\end{align}$$
+
+```{r}
+getPearsonCorrelationCoeffcient <-function(data0,data1){
+  #levene_test <- leveneTest(data0, data1)
+  #print(levene_test)
+  n0 <- length(data0)
+  n1 <- length(data1)
+  if(n0!=n1){
+    print("error")
+  }
+  n <- n0
+  mean0 <- mean(data0)
+  mean1 <- mean(data1)
+  cov_ <- sum((data0-mean0)*(data1-mean1))/(n-1)
+  sd_x <- sqrt(sum((data0-mean0)^2)/(n-1))
+  sd_y <- sqrt(sum((data1-mean1)^2)/(n-1))
+  r <- cov_/(sd_x*sd_y)
+  df <- n-2
+  t <- r / sqrt( (1-r^2) / df)
+  #2.0322
+  #p_value = dt(t,df=df)
+  p_value = 2*pt(-abs(t),df=df)#dt(t,df=df)
+  
+  #p_value = 2* pf( r^2 * df / (1 - r^2) , df1=df, df2=Inf)
+  cat("r:",r,"t:",t,"df",df,"p-value",p_value ,"\n")
+}
+
+getPearsonCorrelationCoeffcient(data$depression,data$anxiety)
+getPearsonCorrelationCoeffcient(data$depression,data$pressure)
+getPearsonCorrelationCoeffcient(data$anxiety,data$pressure)
+###
+cor.test(data$depression,data$anxiety)
+cor.test(data$depression,data$pressure)
+cor.test(data$anxiety,data$pressure)
+```
+
+## 回归分析
+
+### 一元回归分析
+
+#### 最小二乘法推导beta0 beta1
+
+$$\begin{align}
+y_i=\beta_0+\beta_1x_i+\mu_i \\
+\mu的期望值为零，x和\mu之间的协方差也为零\\
+E(\mu)=0 \to E(y-\beta_0-\beta_1x) = 0\\
+Cov(x,\mu)=E(x\mu)=0 \to E(x(y-\beta_0-\beta_1x))=0\\
+对一组样本,估计\hat{\beta_0},\hat{\beta_1}可得方程: \\
+n^{-1}\sum_{i=0}^{n}(y_i-\hat{\beta_0}-\hat{\beta_1}x_i) = 0 \to 
+n^{-1}\sum_{i=0}^{n}(y_i)-n^{-1}\sum_{i=0}^{n}(\hat{\beta_0})-n^{-1}\sum_{i=0}^{n}(\hat{\beta_1}x_i) = 0 \\
+\to \bar{y}-\hat{\beta_0}-\hat{\beta_1}\bar{x}=0 \\
+由此可得:\hat{\beta_0}=\bar{y}-\hat{\beta_1}\bar{x} \\
+n^{-1}\sum_{i=0}^{n}x_i(y_i-\hat{\beta_0}-\hat{\beta_1}x_i)=0 \to
+n^{-1}\sum_{i=0}^{n}x_i(y_i-(\bar{y}-\hat{\beta}\bar{x})-\hat{\beta_1}x_i)=0 \\
+\to n^{-1}\sum_{i=0}^{n}x_i(y_i-\bar{y}+\hat{\beta_1}\bar{x}-\hat{\beta_1}x_i)=0 \\
+\to n^{-1}\sum_{i=0}^{n}x_i(y_i-\bar{y}) = n^{-1}\sum_{i=0}^{n}x_i(\hat{\beta_1}x_i-\hat{\beta_1}\bar{x})(*从左到右变号,x_i,\bar{x}换位) = \\
+n^{-1}\hat{\beta_1}\sum_{i=0}^{n}x_i(x_i-\bar{x}) ->
+\hat{\beta_1}=\frac{n^{-1}\sum_{i=0}^{n}x_i(y_i-\bar{y})}{n^{-1}\sum_{i=0}^{n}x_i(x_i-\bar{x})} \to
+\hat{\beta_1}=\frac{\sum_{i=0}^{n}x_i(y_i-\bar{y})}{\sum_{i=0}^{n}x_i(x_i-\bar{x})}
+\end{align}$$
+
+$$\begin{align}
+求合算子性质化简: \\
+\sum_{i=0}^{n}x_i(y_i-\bar{y}) \to 
+\sum_{i=0}^{n}(x_iy_i-x_i\bar{y}) \to
+\sum_{i=0}^{n}x_iy_i-\sum_{i=0}^{n}x_i\bar{y} \to
+\sum_{i=0}^{n}x_iy_i-n\bar{y}\sum_{i=0}^{n}x_i \to \\
+\sum_{i=0}^{n}x_iy_i-n\bar{y}\bar{x} \to 
+\sum_{i=0}^{n}x_iy_i-\sum_{i=0}^{n}x_i\bar{y}\ or \ 
+\sum_{i=0}^{n}x_iy_i-\sum_{i=0}^{n}y_i\bar{x} \to \\
+\sum_{i=0}^{n}x_i(y_i-\bar{y}) \ or \ \sum_{i=0}^{n}y_i(x_i-\bar{x})
+\\
+\sum_{i=0}^{n}x_iy_i-n\bar{y}\bar{x} \to
+\sum_{i=0}^{n}x_iy_i-n\bar{y}\bar{x}-n\bar{y}\bar{x}+n\bar{y}\bar{x} \to \\
+\sum_{i=0}^{n}x_iy_i-\sum_{i=0}^{n}x_i\bar{y}-\sum_{i=0}^{n}\bar{x}y_i+\sum_{i=0}^{n}\bar{x}\bar{y} \\
+\sum_{i=0}^{n}(x_iy_i-x_i\bar{y}-\bar{x}y_i+\bar{x}\bar{y}) \to
+\sum_{i=0}^{n}(x_i-\bar{x})(y_i-\bar{y})
+\end{align}$$
+
+$$\begin{align}
+\sum_{i=0}^{n}x_i(x_i-\bar{x}) \to \sum_{i=0}^{n}(x_i^2-x_i\bar{x}) \to 
+\sum_{i=0}^{n}x_i^2 -\sum_{i=0}^{n}x_i\bar{x} \to
+\sum_{i=0}^{n}x_i^2 - \bar{x}\sum_{i=0}^{n}x_i \to \\
+\sum_{i=0}^{n}x_i^2 - n\bar{x}^2 \to  
+\sum_{i=0}^{n}x_i^2 - 2n\bar{x}^2 + n\bar{x}^2 \to  
+\sum_{i=0}^{n}(x_i^2 - 2\bar{x}^2 + \bar{x}^2) \to 
+\sum_{i=0}^{n}(x_i-\bar{x})^2 
+\end{align}$$
+
+$$\begin{align}
+代入化简公式:\\
+\hat{\beta_1}=\frac{\sum_{i=0}^{n}(x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=0}^{n}(x_i-\bar{x})^2 } \\
+观察发现相近公式: \\
+协方差Cov(x,y)=\frac{\sum_{i=1}^{n}(x_i-\bar{x})(y_i-\bar{y})}{n-1} \ and\ 
+方差 Var(x) = \frac{\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1} \\
+分子同除n-1可抵消得:\\
+\hat{\beta_1}=\frac{Cov(x,y)}{var(x)},\hat{\beta_0}=\bar{y}-\hat{\beta_1}\bar{x}
+\end{align}$$
+
+#### 求回归标准误差
+
+Std. Error of the Estimate / standard error of the regression, SER Residual Sum of Squares ,RSS 是回归分析中用于衡量观测值与回归模型预测值之间差异的一个重要指标。它是残差的平方和，表示了模型未能解释的观测值的方差。 $$\begin{align}
+SSE = \sum_{i=1}^{n}(y_i-\hat{y})^2 \\
+MSE = \frac{SSE}{n-k} \\
+SER = \sqrt{MSE} \\
+SER = (\sum_{i=1}^{n}(y_i-\hat{y})^2*(n-k)^{-1})^{\frac{1}{2}}
+\end{align}$$ 
+
+#### beta0, beta1标准差及t值,显著性 
+$$\begin{align}
+SE(\hat\beta_0) = \sqrt{\frac{MSE*\sum_{i=1}^{N}x_i^2}{N*\sum_{i=1}^{n}(x_i-\bar{x})^2}} \to SE(\hat\beta_0) = \sqrt{\frac{ \frac{\sum_{i=1}^{n}*(y_i-\hat{y})^2}{n-k} *\sum_{i=1}^{N}x_i^2}{N*\sum_{i=1}^{n}(x_i-\bar{x})^2}}
+\\
+SE(\hat\beta_1) = \sqrt{\frac{MSE}{\sum_{i=1}^{n}(x_i-\bar{x})^2}} \to 
+SE(\hat\beta_1) = \sqrt{\frac{ \frac{\sum_{i=1}^{n}*(y_i-\hat{y})^2}{n-k} }{\sum_{i=1}^{n}(x_i-\bar{x})^2}} 
+\\
+T(\beta_0) = \frac{\beta0}{SE(\beta_0)} \\
+T(\beta_1) = \frac{\beta1}{SE(\beta_1)} \\
+PValue(\beta0) = 2*pt(-|T(\beta0)|,df) \\
+PValue(\beta1) = 2*pt(-|T(\beta1)|,df)
+\end {align}$$
+
+#### R,R square
+
+$$\begin{align}
+R = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum(x_i - \bar{x})^2} \sqrt{\sum(y_i - \bar{y})^2}}\\
+SST = \sum_{i=1}^{n}(y_i-\bar{y})^2 \\
+SSE=\sum_{i=1}^{n}(\hat{y}-\bar{y})^2,\\
+SSR = \sum_{i=1}^{n}(y_i-\hat{y})^2
+\\
+R^2 = 1 - \frac{SSR(残差平方和)}{SST(总平方和)}
+= 1-\frac{\sum_{i=1}^{n}(y_i-\hat{y})^2}{ \sum_{i=1}^{n}(y_i - \bar{y})^2 } =
+\frac{\sum_{i=1}^{n}(y_i-\bar{y})(\hat{y}-\bar{\hat{y}})}{(\sum_{i=1}^{n}(y_i-\bar{y})^2)(\sum_{i=1}^{n}(\hat{y}-\bar{\hat{y}})^2)}
+\\
+Adjusted\ R^2 = 1 - \frac{SSR}{df_e}/\frac{SST}{df_t}\\
+df_e = n(样本数)-k(参数个数,一元中有两个beta),\ df_t = n-1
+\end{align}$$
+
+```{r}
+SimpleLinearRegression <- function(datax,datay){
+  x_m = mean(datax)
+  y_m = mean(datay)
+  cov = sum((datax-x_m)*(datay-y_m))
+  var = sum((datax-x_m)^2)
+  beta1 = cov/var
+  beta0 = y_m - beta1*x_m
+  N = length(datay)
+  df =  N-2
+  SS_res = sum( (datay-(beta0+beta1*datax))^2) 
+  SSX = sum((datax-x_m)^2)
+  MSE = SS_res/df
+  mu = sqrt( MSE )
+  beta0_SE = sqrt(MSE/N)
+  beta0_SE = sqrt( MSE*sum(datax^2) / (N*sum((datax-x_m)^2) ) )
+  beta1_SE = sqrt(MSE/SSX)
+  beta0_t = beta0/beta0_SE
+  beta1_t = beta1/beta1_SE
+  beta0_pValue = 2*pt(-abs(beta0_t),df=df)
+  beta1_pValue = 2*pt(-abs(beta1_t),df=df)
+  r = cov / (sqrt(var)* sqrt(sum((datay-y_m)^2)) )
+  r_square = 1- SS_res / (sum((datay-y_m)^2))
+  adjusted_r_square = 1- (SS_res/df) /  (sum((datay-y_m)^2)/(N-1) ) 
+  cat("beta0:",beta0,"beta1",beta1,"mu:",mu,"MSE:",MSE,"beta0_SE:",beta0_SE,"beta1_SE:",beta1_SE,"beta0_t:",beta0_t,"beta1_t:",beta1_t,"beta0_pValue:",beta0_pValue,"beta1_pValue:",beta1_pValue,"r:",r,"r square",r_square,"adjusted_r_square",adjusted_r_square,"\n")
+  
+}
+SimpleLinearRegression(data$depression,data$anxiety)
+```
+
+```{r}
+#r内置计算方法
+#getPearsonCorrelationCoeffcient(data$depression,data$anxiety)
+#getPearsonCorrelationCoeffcient(data$depression,data$pressure)
+#getPearsonCorrelationCoeffcient(data$anxiety,data$pressure)
+plot(data$depression,data$anxiety)
+plot(data$depression,data$pressure)
+plot(data$anxiety,data$pressure)
+model<-lm(depression~anxiety,data=data)
+summary(model)
+anova(model)
+summary(model)$r.squared
+#data$anxiety-predict(model)
+```
+
+### 多元回归分析
+
+#### 最小二乘法推导beta
+
+$$\begin{align}
+y_i = \beta_0+\beta_1x_{1i}+\beta_2x_{2i}+\beta_3x_{xi}+...+\beta_nx_{ni}+\mu_i \\
+\mu = \sum_{i=1}^{n}\mu^2_i = 0 = \sum_{i=1}^{n}( y_i - \beta_0+\beta_1x_{1i}+\beta_2x_{2i}+\beta_3x_{xi}+...+\beta_nx_{ni} )^2
+\end{align}$$
+
+```{r}
+model2<-lm(pressure ~ depression + anxiety, data=data )
+summary(model2)
+vif(model2)
+#anova(model)
+#summary(model)$r.squared
+```
